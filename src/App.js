@@ -15,9 +15,9 @@ import { UserContext } from './components/UserContext';
 export default function App() {
     const [user, setUser] = useState();
     useEffect(() => {
-        setUser(JSON.parse(window.localStorage.getItem('user')));
+        setUser(window.localStorage.getItem('user'));
         console.log(user);
-        console.log(JSON.parse(window.localStorage.getItem('user')));
+        console.log(window.localStorage.getItem('user'));
       },[]);
     return (
         <BrowserRouter>
