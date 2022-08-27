@@ -7,7 +7,6 @@ import logo from '../assets/img/logo.svg';
 import { UserContext } from '../components/UserContext';
 // import { Container } from './styles';
 import axios from 'axios';
-import { windows } from 'fontawesome';
 
 function Login() {
     const navigate = useNavigate();
@@ -15,57 +14,25 @@ function Login() {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [error, setError] = useState("");
-    
-
     const URL_LOGIN = 'http://localhost:4000/login'
 
     async function logar(event) {
         event.preventDefault();
-        const response = await axios.post(URL_LOGIN, {email: email, password: senha}, {validateStatus: false});
-        // console.log(response.data)
+        const response = await axios.post(
+            URL_LOGIN, 
+            {email: email, password: senha}, 
+            {validateStatus: false, withCredentials: true }
+        );
+        console.log(response)
         if (response.data.auth){
             setUser(response.data.email);
             window.localStorage.setItem("user", response.data.email);
-            window.localStorage.setItem("accessToken", response.data.accessToken);
-            window.localStorage.setItem("refreshToken", response.data.refreshToken);
             navigate('/home');
         }
         else{
             setError(response.data.message)
         }
         
-        // const auth = getAuth();
-        // signInWithEmailAndPassword(auth, email, senha)
-        //     .then((userCredential) => {
-        //         // Signed in
-        //         const user = userCredential.user;
-        //         console.log(user);
-        //         setError("");
-        //         setUser(user);
-        //         window.localStorage.setItem("user", JSON.stringify(user));
-        //         navigate('/home');
-        //     })
-        //     .catch((error) => {
-        //         const errorCode = error.code;
-        //         /* const errorMessage = error.message; */
-        //         switch (errorCode) {
-        //             case 'auth/user-not-found':
-        //                 setError('Usuário não encontrado.');
-        //                 break;
-        //             case 'auth/wrong-password':
-        //                 setError('Senha incorreta.');
-        //                 break;
-        //             case 'auth/internal-error':
-        //                 setError('Usuário ou senha incorretos.');
-        //                 break;
-        //             case 'auth/invalid-email':
-        //                 setError('Email inválido.');
-        //                 break;
-        //             default:
-        //                 setError(errorCode);
-        //                 break;
-        //         }
-        //     });
     }
 
     return <div>

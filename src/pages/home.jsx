@@ -3,105 +3,92 @@ import { Link } from "react-router-dom";
 import './home.css';
 import axios from 'axios'
 import { useNavigate } from "react-router-dom";
-import { windows } from 'fontawesome';
 // import {UserContext} from '../components/UserContext';
 // import { Container } from './styles';
-
-const URL_PRIVATE = 'http://127.0.0.1:4000/private'
-const URL_TOKEN = 'http://127.0.0.1:4000/token'
-const URL_LOGOUT = 'http://127.0.0.1:4000/logout'
 
 function Home() {
   
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [accessToken, setAccessToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
+
+  axios.interceptors.request.use(function (config) {
+    config.baseURL = "http://localhost:4000"
+    config.withCredentials = true
+    config.validateStatus = false
+    return config;
+  }, function (error) {
+    return Promise.reject(error);
+  });
 
   async function confidencial(event){
     event.preventDefault();
-    const accessToken = window.localStorage.getItem('accessToken')
-    const response = await axios.get(
-        URL_PRIVATE, 
-        { headers: { 'Authorization': `Bearer ${accessToken}`}, validateStatus: false },
-    );
+    const response = await axios.get('private');
     if (response.status !== 200){
-      const refreshToken = window.localStorage.getItem('refreshToken')
-    const response = await axios.post(
-      URL_TOKEN,
-      {token: refreshToken},
-      { validateStatus: false },
-    );
-    if (response.status !== 200) {
-      window.localStorage.clear()
-      navigate('/login');
-    }
-    setAccessToken(response.data.accessToken)
-    window.localStorage.setItem("accessToken", response.data.accessToken);
-    setRefreshToken(response.data.refreshToken)
-    window.localStorage.setItem("refreshToken", response.data.refreshToken);
-    setMessage("Novo codigo de acesso")
-    setError("")
-    
+      setMessage("")
+      setError(response.data.message)
     }else{
-      setAccessToken(window.localStorage.getItem('accessToken'))
-      setRefreshToken(window.localStorage.getItem('refreshToken'))
       setError("")
-      setMessage("Pagina autenticada")
+      setMessage("Página autenticada com sucesso")
     }
-    console.log(response)
   }
   
   async function renovaToken(event){
     event.preventDefault();
-    const refreshToken = window.localStorage.getItem('refreshToken')
-    const response = await axios.post(
-      URL_TOKEN,
-      {token: refreshToken},
-      { validateStatus: false },
-    );
+    const response = await axios.post('token', {});
     if (response.status !== 200) {
       window.localStorage.clear()
       navigate('/login');
     }
-    setAccessToken(response.data.accessToken)
-    window.localStorage.setItem("accessToken", response.data.accessToken);
-    setRefreshToken(response.data.refreshToken)
-    window.localStorage.setItem("refreshToken", response.data.refreshToken);
     setMessage("Novo codigo de acesso")
     setError("")
-    console.log(response)
+  }
 
+  async function confidenticalERenovaTokenAutomaticamente(event){
+    event.preventDefault();
+    let response = await axios.get('private');
+      if (response.status !== 200){
+        response = await axios.post('token', {});
+        if (response.status !== 200) {
+          window.localStorage.clear()
+          navigate('/login');
+        }
+      setMessage("Novo codigo de acesso")
+      response = await axios.get('private');
+      if (response.status !== 200){
+        setMessage("")
+        setError(response.data.message)
+      }else{
+        setError("")
+        setMessage("Página autenticada com sucesso")
+      }
+    }else{
+      setError("")
+      setMessage("Página autenticada com sucesso")
+    }
   }
 
   async function logout(event){
     event.preventDefault();
-    const refreshToken = window.localStorage.getItem('refreshToken')
-    const response = await axios.post(
-      URL_LOGOUT,
-      {token: refreshToken},
-      { validateStatus: false },
-    );
+    const response = await axios.post('logout',{})
     if (response.status !== 200) {
       setError(response.data.message)
+      setMessage("")
     }
-    if (!response.data.auth){
+    if (! response.data.auth){
       window.localStorage.clear()
       navigate('/login');
     }
-    console.log(response)
-
   }
   
   //const {user} = useContext(UserContext);
-  //console.log(user);
   return <div className="App">
     <header className="App-header">
     <div className='user-image'><i className="fas fa-user-circle"></i></div>
     
-    <button className="btn btn-primary" onClick={confidencial}>Pagina privada</button>
-    <button className="btn btn-primary" onClick={renovaToken}>Renova token</button>
+    <button className="btn btn-primary" onClick={confidencial}>Acessa página privada</button>
+    <button className="btn btn-secondary" onClick={renovaToken}>Renova token de atualização</button>
+    <button className="btn btn-primary" onClick={confidenticalERenovaTokenAutomaticamente}>Acessa página privada e Renova token de atualização automaticamente</button>
     <button className="btn btn-danger" onClick={logout}>Logout</button>
     
       <p>
@@ -114,14 +101,7 @@ function Home() {
       <div>{message !== "" ? (
           <p className="text-primary">{message}</p>
           ) : null}
-      </div>
-      <p>
-        Token de acesso: {accessToken}
-      </p>
-      <p>
-        Token de atualização: {refreshToken}
-      </p>
-      
+      </div>   
       {/* <Link to="/" className='btn btn-danger btn-lg'>Logout</Link> */}
     </header>
   </div>;
